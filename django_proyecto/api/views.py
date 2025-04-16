@@ -2,7 +2,10 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import serializers
+from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
+
+from django.db import transaction, IntegrityError
 
 from .models import *
 from .serializers import *
@@ -367,7 +370,7 @@ def plan_organismo_sectorial(request):
     ### **Parámetros (POST)**
     - `id_plan` (int, requerido): ID del plan.
     - `id_organismo_sectorial` (int, requerido): ID del organismo sectorial.
-    - `id_media` (int, requerido): ID de la medida.
+    - `media` (int, [int], requerido): ID's de la medida.
 
     ### **Respuestas**
     - **GET 200**: Lista de relaciones plan-organismo-medida.
@@ -387,11 +390,83 @@ def plan_organismo_sectorial(request):
         if not IsAdministrador().has_permission(request, None):
             return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
         
-        serializer = PlanOrganismoSectorialSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response({"detail": serializer.errors}, status=400)
+        data = request.data
+        id_plan = data.get("id_plan")
+        id_organismo = data.get("id_organismo_sectorial")
+        medidas = data.get("medidas")
+        
+        # 2. Validar campos obligatorios
+        errores = {}
+        if id_plan is None:
+            errores["id_plan"] = "Este campo es obligatorio."
+        if id_organismo is None:
+            errores["id_organismo_sectorial"] = "Este campo es obligatorio."
+        if medidas is None:
+            errores["medidas"] = "Este campo es obligatorio."
+
+        if errores:
+            return Response({"detail": errores}, status=400)
+        
+        # 3. Normalizar medidas
+        if isinstance(medidas, int):
+            medidas = [medidas]
+        elif not isinstance(medidas, list):
+            return Response({"detail": "El campo 'medidas' debe ser un entero o una lista de enteros."}, status=400)
+
+        if len(medidas) != len(set(medidas)):
+            return Response({"detail": "Existen medidas duplicadas."}, status=400)
+        
+        try:
+            with transaction.atomic():
+                instancias_creadas = []
+
+                for id_medida in medidas:
+                    existe = PlanOrganismoSectorial.objects.filter(
+                        id_plan_id=id_plan,
+                        id_organismo_sectorial_id=id_organismo,
+                        id_media_id=id_medida
+                    ).exists()
+
+                    if existe:
+                        raise serializers.ValidationError(
+                            f"La medida {id_medida} ya está asociada al plan y organismo."
+                        )
+
+                    serializer = PlanOrganismoSectorialSerializer(data={
+                        "id_plan": id_plan,
+                        "id_organismo_sectorial": id_organismo,
+                        "id_media": id_medida
+                    })
+
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    instancias_creadas.append(serializer.data)
+
+            return Response({
+                "mensaje": "Las medidas fueron asociadas correctamente.",
+                "cantidad": len(instancias_creadas),
+                "datos": instancias_creadas
+            }, status=201)
+
+        except serializers.ValidationError as e:
+            return Response({"detail": e.detail}, status=400)
+
+        except IntegrityError:
+            return Response({
+                "detail": "Error de integridad. No se realizaron cambios."
+            }, status=500)
+
+        except Exception as e:
+            return Response({
+                "detail": f"Error inesperado: {str(e)}"
+            }, status=500)
+
+        
+        # serializer = PlanOrganismoSectorialSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=201)
+        # return Response({"detail": serializer.errors}, status=400)
 
 ##### Tabla REPORTE #######
 @extend_schema(
