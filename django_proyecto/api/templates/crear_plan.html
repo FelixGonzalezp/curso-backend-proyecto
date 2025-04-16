@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'html_plan' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver a Planes
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Crear Nuevo Plan</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{% url 'html_plan' %}" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre del Plan</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                <div class="invalid-feedback">
+                    Por favor ingrese un nombre para el plan.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
+                <div class="invalid-feedback">
+                    Por favor ingrese una descripción.
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                    <div class="invalid-feedback">
+                        Por favor seleccione una fecha de inicio.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="fecha_termino" class="form-label">Fecha de Término</label>
+                    <input type="date" class="form-control" id="fecha_termino" name="fecha_termino" required>
+                    <div class="invalid-feedback">
+                        Por favor seleccione una fecha de término.
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="responsable" class="form-label">Responsable</label>
+                <input type="text" class="form-control" id="responsable" name="responsable" required>
+                <div class="invalid-feedback">
+                    Por favor ingrese un responsable.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado" required>
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear Plan</button>
+        </form>
+
+        {% if errors %}
+        <div class="alert alert-danger mt-3">
+            <h4 class="alert-heading">Errores en el formulario:</h4>
+            <ul>
+                {% for field, error in errors.items %}
+                <li>{{ field }}: {{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        margin-bottom: 2rem;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+    }
+    .btn-secondary {
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+        transform: translateX(-5px);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Script para la validación del formulario del lado del cliente
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+</script>
+{% endblock %}

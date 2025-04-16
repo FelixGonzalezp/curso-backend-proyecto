@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Botón Volver al Home -->
+<div class="mb-4">
+    <a href="{% url 'html_home' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver al Home
+    </a>
+</div>
+
+<h1>Listado de Organismos Sectoriales</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Contacto</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for organismo in organismos %}
+        <tr>
+            <td>{{ organismo.id_organismo_sectorial }}</td>
+            <td>{{ organismo.nombre }}</td>
+            <td>{{ organismo.tipo }}</td>
+            <td>{{ organismo.contacto }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #f8f9fa;
+    }
+    .truncate {
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .btn-secondary {
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+        transform: translateX(-5px);
+    }
+</style>
+{% endblock %}
