@@ -4,9 +4,11 @@ asgiref==3.8.1
 attrs==25.1.0
 click==8.1.8
 colorama==0.4.6
-Django==5.1.5
+Django==4.2.20
 djangorestframework==3.15.2
+djangorestframework_simplejwt==5.5.0
 drf-spectacular==0.28.0
+exceptiongroup==1.2.2
 fastapi==0.115.7
 h11==0.14.0
 idna==3.10
@@ -16,6 +18,7 @@ jsonschema-specifications==2024.10.1
 psycopg2-binary==2.9.10
 pydantic==2.10.6
 pydantic_core==2.27.2
+PyJWT==2.9.0
 PyYAML==6.0.2
 referencing==0.36.2
 rpds-py==0.22.3
@@ -26,4 +29,3 @@ typing_extensions==4.12.2
 tzdata==2025.1
 uritemplate==4.1.1
 uvicorn==0.34.0
-drf-spectacular
