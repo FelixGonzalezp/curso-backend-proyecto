@@ -177,3 +177,43 @@ class PlanApiTest(TestCase):
         }
         response = self.client.post('/api/plan/', data)
         self.assertEqual(response.status_code, 201)
+
+
+from django.contrib.auth.models import Permission
+
+class ValidacionErrorTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(username='admin3', password='123456', is_staff=True, is_superuser=True)
+
+        # ⚠️ Agregarlo al grupo correcto
+        grupo, _ = Group.objects.get_or_create(name='Administrador')
+        self.admin.groups.add(grupo)
+
+        self.client.force_authenticate(user=self.admin)
+
+    def test_tipo_medida_post_falla_por_falta_de_datos(self):
+        data = {"descripcion": "Falta nombre"}
+        response = self.client.post('/api/tipo-medida/', data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('nombre', str(response.data))
+
+
+class PermisosDenegadosTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='usuario_normal', password='123456')
+
+    def test_usuario_sin_grupo_no_puede_postear_plan(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "nombre": "Plan Invalido",
+            "descripcion": "No debería poder crearse",
+            "fecha_inicio": "2024-04-01",
+            "fecha_termino": "2024-12-31",
+            "responsable": "Alguien",
+            "estado": True
+        }
+        response = self.client.post('/api/plan/', data)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('No tiene permisos', str(response.data))
