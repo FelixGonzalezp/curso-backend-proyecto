@@ -21,7 +21,7 @@ fi
 # Instalar los paquetes especificados en el archivo requirements.txt
 echo "Instalando paquetes desde requirements.txt..."
 pip install -r requirements.txt
-cd django_proyecto
+# cd django_proyecto
 
 if [ ! -f "db.sqlite3" ]; then
     echo "Creando db.sqlite3"

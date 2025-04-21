@@ -112,7 +112,6 @@ class Plan(models.Model):
     def __str__(self):
         return f"{self.id} - {self.nombre}"
 
-
 class PlanOrganismoSectorial(models.Model):
    """
    Modelo para representar la relación entre un plan y un organismo sectorial.

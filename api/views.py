@@ -29,6 +29,9 @@ class IsOrganismoSectorial(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.groups.filter(name='OrganismoSectorial').exists()
 
+def NotAuthorization():
+    return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+
 ##### Tabla TIPO MEDIDA #######
 @extend_schema(
     methods=['GET'],
@@ -82,13 +85,15 @@ def tipo_medida(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((TipoMedidaSerializer((TipoMedida.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not IsAdministrador().has_permission(request, None):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         serializer = TipoMedidaSerializer(data=request.data)
         if serializer.is_valid():
@@ -159,13 +164,15 @@ def medida(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((MedidaSerializer((Medida.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not IsAdministrador().has_permission(request, None):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         serializer = MedidaSerializer(data=request.data)
         if serializer.is_valid():
@@ -234,13 +241,15 @@ def plan(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((PlanSerializer((Plan.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not IsAdministrador().has_permission(request, None):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         # Si los datos vienen como form-data
         if request.content_type == 'application/x-www-form-urlencoded':
@@ -313,13 +322,15 @@ def organismo_sectorial(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((OrganismoSectorialSerializer((OrganismoSectorial.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not IsAdministrador().has_permission(request, None):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         serializer = OrganismoSectorialSerializer(data=request.data)
         if serializer.is_valid():
@@ -383,36 +394,37 @@ def plan_organismo_sectorial(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((PlanOrganismoSectorialSerializer((PlanOrganismoSectorial.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not IsAdministrador().has_permission(request, None):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         data = request.data
         id_plan = data.get("id_plan")
         id_organismo = data.get("id_organismo_sectorial")
         id_medidas = data.get("id_medida")
         
-        # 2. Validar campos obligatorios
-        errores = {}
-        if id_plan is None:
-            errores["id_plan"] = "Este campo es obligatorio."
-        if id_organismo is None:
-            errores["id_organismo_sectorial"] = "Este campo es obligatorio."
-        if id_medidas is None:
-            errores["id_medida"] = "Este campo es obligatorio."
-
-        if errores:
-            return Response({"detail": errores}, status=400)
-        
-        # 3. Normalizar medidas
-        if len(id_medidas) != len(set(id_medidas)):
-            return Response({"detail": "Existen medidas duplicadas."}, status=400)
-        
         try:
+            # 2. Validar campos obligatorios
+            errores = {}
+            if id_plan is None:
+                errores["id_plan"] = ["Este campo es obligatorio."]
+            if id_organismo is None:
+                errores["id_organismo_sectorial"] = ["Este campo es obligatorio."]
+            if id_medidas is None:
+                errores["id_medida"] = ["Este campo es obligatorio."]
+            if errores:
+                raise serializers.ValidationError(errores)
+
+            # 3. Normalizar medidas
+            if len(id_medidas) != len(set(id_medidas)):
+                raise serializers.ValidationError("Existen medidas duplicadas.")
+            
             with transaction.atomic():
                 instancias_creadas = []
 
@@ -447,9 +459,9 @@ def plan_organismo_sectorial(request):
         except serializers.ValidationError as e:
             return Response({"detail": e.detail}, status=400)
 
-        except IntegrityError:
+        except IntegrityError as e:
             return Response({
-                "detail": "Error de integridad. No se realizaron cambios."
+                "detail": f"Error de integridad. No se realizaron cambios. ({str(e)})"
             }, status=500)
 
         except Exception as e:
@@ -512,14 +524,16 @@ def reporte(request):
         if not (IsAuthenticated().has_permission(request, None) or 
                 IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         return Response((ReporteSerializer((Reporte.objects.all()), many=True)).data)
     elif request.method == "POST":
         # Verificar permisos manualmente
         if not (IsAdministrador().has_permission(request, None) or 
                 IsOrganismoSectorial().has_permission(request, None)):
-            return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            # return Response({"detail": "No tiene permisos para realizar esta acción."}, status=403)
+            return NotAuthorization()
         
         serializer = ReporteSerializer(data=request.data)
         if serializer.is_valid():
