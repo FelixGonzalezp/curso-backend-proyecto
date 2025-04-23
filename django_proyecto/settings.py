@@ -30,7 +30,11 @@ SECRET_KEY = 'django-insecure-#a@okqke9%p-j=m)5xg$2fxnpm14lt2@bvoptfx6n9tsxpl9tj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    os.environ.get("PRODUCTION_HOST"),
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -169,28 +173,19 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
+# Configura correctamente los archivos estáticos
 STATIC_URL = "/static/"
-# This production code might break development mode, so we check whether we're in DEBUG mode
-if (
-    not DEBUG
-):  # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
-    # and renames the files with unique names for each version to support long-term caching
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# Si estás en producción (Render), añade esto
+if not DEBUG:
+    # WhiteNoise para servir archivos estáticos en producción
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ## Para iniciar el servidor con SSL
 ##uvicorn django_proyecto.asgi:application --ssl-keyfile=key.pem --ssl-certfile=cert.pem --host localhost --port 8000 --loop asyncio
 
-## python manage.py migrate --settings=myproject.settings_dev
+## python manage.py migrate --settings=django_proyecto.settings_dev
 ## python manage.py runserver --settings=myproject.settings_dev
