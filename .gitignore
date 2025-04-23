@@ -2,3 +2,8 @@
 **/__pycache__
 .codegpt
 db.sqlite3
+venv/
+*.pyc
+.env
+staticfiles/*
+!staticfiles/.gitkeep
