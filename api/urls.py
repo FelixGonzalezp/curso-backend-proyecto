@@ -6,7 +6,6 @@ urlpatterns = [
     # path('', views.home, name='home'),
     path('tipo-medida/', views.tipo_medida, name='tipo_medida'),
     path('plan/', views.plan, name='plan'),
-    # path('plan/crear/', views.crear_plan_view, name='crear_plan'),
     path('organismo-sectorial/', views.organismo_sectorial, name='organismo_sectorial'),
     path('medida/', views.medida, name='medida'),
     path('plan-organismo-sectorial/', views.plan_organismo_sectorial, name='plan_organismo_sectorial'),
