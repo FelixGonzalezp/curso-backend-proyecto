@@ -22,16 +22,15 @@ def crear_roles(apps, schema_editor):
             )
             group.permissions.add(permission)
 
-
 def eliminar_roles(apps, schema_editor):
     Group = apps.get_model("auth", "Group")
     Group.objects.filter(name__in=["Administrador", "OrganismoSectorial"]).delete()
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0004_planorganismosectorial_remove_medida_medida_and_more"),
+        ("api", "0001_initial"),
+        ("contenttypes", "0002_remove_content_type_name"),  # Asegúrate de que esta migración se ejecute después de las migraciones de contenttypes
     ]
 
     operations = [
