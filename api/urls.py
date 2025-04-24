@@ -1,15 +1,24 @@
-#proyecto_final\proyecto\django_proyecto\api\urls.py
-from django.urls import path
-from . import views
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+from .views import (
+    TipoMedidaViewSet,
+    MedidaViewSet,
+    PlanViewSet,
+    OrganismoSectorialViewSet,
+    PlanOrganismoSectorialViewSet,
+    ReporteViewSet
+)
+
+router = DefaultRouter()
+router.register(r"tipo-medida", TipoMedidaViewSet)
+router.register(r"medida", MedidaViewSet)
+router.register(r"plan", PlanViewSet)
+router.register(r"organismo-sectorial", OrganismoSectorialViewSet)
+router.register(r"plan-organismo-sectorial", PlanOrganismoSectorialViewSet)
+router.register(r"reporte", ReporteViewSet)
 
 urlpatterns = [
-    # path('', views.home, name='home'),
-    path('tipo-medida/', views.tipo_medida, name='tipo_medida'),
-    path('plan/', views.plan, name='plan'),
-    path('organismo-sectorial/', views.organismo_sectorial, name='organismo_sectorial'),
-    path('medida/', views.medida, name='medida'),
-    path('plan-organismo-sectorial/', views.plan_organismo_sectorial, name='plan_organismo_sectorial'),
-    path('reporte/', views.reporte, name='reporte'),
+    path("", include(router.urls))
 ]
 
 
