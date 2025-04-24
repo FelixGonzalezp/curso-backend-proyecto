@@ -30,6 +30,18 @@ class IsOrganismoSectorial(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.groups.filter(name='OrganismoSectorial').exists()
 
+class IsAuthenticatedAndAdminOrSectorial(BasePermission):
+    """
+    Permite acceso solo a usuarios con rol de Administrador u OrganismoSectorial.
+    """
+    def has_permission(self, request, view):
+        if not IsAuthenticated().has_permission(request, view):
+            return False
+        return (
+            IsAdministrador().has_permission(request, view) or
+            IsOrganismoSectorial().has_permission(request, view)
+        )
+
 @extend_schema_view(
     list=extend_schema(
         description="Devuelve la lista de tipos de medida existentes.",
@@ -103,7 +115,7 @@ class MedidaViewSet(ModelViewSet):
         if self.action in ['create', 'destroy']:
             return [IsAuthenticated(), IsAdministrador()]
         elif self.action in ['list']:
-            return [IsAuthenticated(), (IsAdministrador() or IsOrganismoSectorial())]
+            return [IsAuthenticatedAndAdminOrSectorial()]
         return [IsAuthenticated()]
     
     def get_object(self):
@@ -175,7 +187,7 @@ class PlanViewSet(ModelViewSet):
         if self.action in ['create', 'destroy']:
             return [IsAuthenticated(), IsAdministrador()]
         elif self.action == 'list':
-            return [IsAuthenticated(), (IsAdministrador() or IsOrganismoSectorial())]
+            return [IsAuthenticatedAndAdminOrSectorial()]
         return [IsAuthenticated()]
     
     def get_object(self):
@@ -247,7 +259,7 @@ class OrganismoSectorialViewSet(ModelViewSet):
         if self.action in ['create', 'destroy']:
             return [IsAuthenticated(), IsAdministrador()]
         elif self.action == 'list':
-            return [IsAuthenticated(), (IsAdministrador() or IsOrganismoSectorial())]
+            return [IsAuthenticatedAndAdminOrSectorial()]
         return [IsAuthenticated()]
     
     def get_object(self):
@@ -315,7 +327,7 @@ class PlanOrganismoSectorialViewSet(ModelViewSet):
         if self.action in ['create', 'destroy']:
             return [IsAuthenticated(), IsAdministrador()]
         elif self.action == 'list':
-            return [IsAuthenticated(), (IsAdministrador() or IsOrganismoSectorial())]
+            return [IsAuthenticatedAndAdminOrSectorial()]
         return [IsAuthenticated()]
     
     def get_object(self):
@@ -449,7 +461,7 @@ class ReporteViewSet(ModelViewSet):
         if self.action in ['destroy']:
             return [IsAuthenticated(), IsAdministrador()]
         elif self.action in ['create', 'list']:
-            return [IsAuthenticated(), (IsAdministrador() or IsOrganismoSectorial())]
+            return [IsAuthenticatedAndAdminOrSectorial()]
         return [IsAuthenticated()]
     
     def get_object(self):

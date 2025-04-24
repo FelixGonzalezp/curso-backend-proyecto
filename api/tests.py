@@ -49,7 +49,7 @@ class TipoMedidaApiTest(TestCase):
         Configura el entorno de prueba para los tests de la API de TipoMedida.
         """
         self.client = APIClient()
-        self.admin_user = User.objects.create_user(username='admintest', password='123456')
+        self.admin_user = User.objects.create_user(username=username, password=password)
         self.admin_user.is_superuser = True
         self.admin_user.is_staff = True
         self.admin_user.save()
@@ -308,7 +308,7 @@ class PlanOrganismoSectorialApiTest(TestCase):
         data = {
             "id_plan": 1,
             "id_organismo_sectorial": 1,
-            "id_medida": [1, 3]
+            "id_media": [1, 3]
         }
         response = self.client.post('/api/plan-organismo-sectorial/', data)
         
@@ -346,7 +346,7 @@ class PlanOrganismoSectorialApiTest(TestCase):
         data = {
             "id_plan": 1,
             "id_organismo_sectorial": 1,
-            "id_medida": [1]
+            "id_media": [1]
         }
         response = self.client.post('/api/plan-organismo-sectorial/', data)
         self.assertEqual(response.status_code, 201)
@@ -418,6 +418,7 @@ class ReporteApiTest(TestCase):
         data = {
             "id_plan_organismo_sectorial": self.relacion.id,
             "valor_reportado": 85.5,
+            "evidencia": "url de evidencia",
             "fecha_reporte": "2024-04-15"
         }
         response = self.client.post('/api/reporte/', data)
