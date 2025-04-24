@@ -12,14 +12,6 @@ El sistema permite:
 - Gestionar usuarios por **roles (Administrador, OrganismoSectorial)**.
 - Consumir la API desde interfaces HTML o clientes REST (como Postman).
 
-La API facilita la coordinación entre **organismos sectoriales** y la **autoridad ambiental**, permitiendo:
-
-- Gestión de planes de acción y medidas.
-- Asignación de medidas a organismos responsables.
-- Reporte de avances e indicadores.
-- Acceso restringido según roles (Administrador, OrganismoSectorial).
-- Documentación Swagger de todos los endpoints.
-
 ---
 
 ## Tecnologías Utilizadas
@@ -27,8 +19,11 @@ La API facilita la coordinación entre **organismos sectoriales** y la **autorid
 - Python 3.11+
 - Django 5.1
 - Django REST Framework
-- DRF Spectacular (Documentación OpenAPI)
-- SQLite (base de datos por defecto)
+- DRF Spectacular (Documentación Swagger/OpenAPI 3.0)
+- Bootstrap 5 (Frontend HTML)
+- SQLite (modo local)
+- PostgreSQL (modo producción, vía **Neon**)
+- Despliegue en la nube con **Render**
 
 ---
 
@@ -36,53 +31,63 @@ La API facilita la coordinación entre **organismos sectoriales** y la **autorid
 
 ```
 django_proyecto/
-├── api/                   # App principal con lógica del negocio
-│   ├── models.py          # Modelos: Plan, Medida, TipoMedida, etc.
-│   ├── views.py           # Vistas de API
-│   ├── views_html.py      # Vistas HTML (con autenticación básica)
-│   ├── serializers.py     # Serializadores DRF
-│   ├── urls.py            # Rutas de la API
-│   ├── urls_html.py       # Rutas HTML protegidas
-│   ├── templates/         # HTML renderizado con Bootstrap
-├── django_proyecto/       # Configuración del proyecto Django
-│   ├── settings.py
+├── api/
+│   ├── models.py
+│   ├── serializers.py
+│   ├── views.py              # API REST (CRUD completo)
+│   ├── views_html.py         # Vistas HTML protegidas
+│   ├── urls.py               # Rutas de la API
+│   ├── urls_html.py          # Rutas HTML
+│   ├── templates/            # HTML con Bootstrap
+├── django_proyecto/
+│   ├── settings.py           # Config local o producción (Render)
+│   ├── settings_dev.py
 │   ├── urls.py
-├── manage.py              # Comando base de Django
-├── requirements.txt       # Paquete y dependencias
-├── README.md              # Este archivo
+├── staticfiles/              # Archivos recolectados via collectstatic
+├── .env                      # Variables de entorno
+├── requirements.txt
+├── render.yaml               # Configuración para Render
+├── README.md
 ```
 
 ---
 
-## Modelos Principales
+## Modelos y Relaciones
 
-### `TipoMedida`
-- `nombre`, `descripcion`
-
-### `Medida`
-- `id_tipo_medida` (FK)
-- `indicador`, `forma_calculo`, `frecuencia_reporte`, etc.
-
-### `OrganismoSectorial`
-- `nombre`, `tipo`, `contacto`
-
-### `Plan`
-- `nombre`, `descripcion`, fechas, `estado`, `responsable`
-
-### `PlanOrganismoSectorial`
-- Relaciona un `Plan`, un `OrganismoSectorial` y una `Medida`
-
-### `Reporte`
-- `id_plan_organismo_sectorial`, `valor_reportado`, `fecha_reporte`
+- **TipoMedida**: Categorías para medidas.
+- **Medida**: Indicador, forma de cálculo, frecuencia, etc.
+- **OrganismoSectorial**: Encargados por medida.
+- **Plan**: Planes ambientales asignados.
+- **PlanOrganismoSectorial**: Relación Plan - Organismo - Medida.
+- **Reporte**: Avance en medidas específicas por fecha.
 
 ---
 
-## Roles de Usuario
+## Requisitos de la Entrega Final
 
-El sistema distingue entre:
+Según lo solicitado por el docente, este proyecto incorpora los siguientes puntos clave para la evaluación final:
 
-- **Administrador**: Puede crear, editar y ver todos los registros.
-- **OrganismoSectorial**: Puede visualizar y reportar medidas asignadas.
+1. **Pruebas unitarias**: Se implementan tests básicos utilizando el módulo `unittest` y `TestCase` de Django (`tests.py`).
+2. **Integración continua**: Configuración de GitHub Actions para ejecutar pruebas automáticamente en cada push.
+3. **Despliegue continuo**: Implementación automática en ambiente productivo (`Render`) tras cada actualización en `main`.
+
+> Todo esto se encuentra integrado al repositorio en GitHub.
+
+---
+
+## Autenticación y Roles
+
+El sistema utiliza autenticación mediante:
+
+- **JWT (JSON Web Tokens)** – usando `rest_framework_simplejwt`
+- **SessionAuthentication** – útil para navegación desde la interfaz HTML
+
+Además, todos los endpoints requieren autenticación gracias a la configuración global en `REST_FRAMEWORK`.
+
+Se aplican permisos personalizados por tipo de usuario:
+
+- `IsAdministrador`: Acceso total.
+- `IsOrganismoSectorial`: Permite ver y reportar.
 
 ---
 
@@ -91,98 +96,115 @@ El sistema distingue entre:
 ### 1. Clona el repositorio
 
 ```bash
-git clone <URL-del-repositorio>
-cd django_proyecto
+git clone https://github.com/FelixGonzalezp/curso-backend-proyecto.git
+cd curso-backend-proyecto
 ```
 
-### 2. Crea y activa un entorno virtual
+### 2. Crea un entorno virtual y actívalo
 
 ```bash
 python -m venv env
-source env/bin/activate  # Linux/macOS
 env\Scripts\activate     # Windows
+source env/bin/activate  # Linux/macOS
 ```
 
-### 3. Instala dependencias
+### 3. Instala los requisitos
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Migraciones y usuario admin
+### 4. Configura variables de entorno
+
+Crea un archivo `.env` con contenido como:
+
+```
+DEBUG=True
+SECRET_KEY=clave-secreta
+PRODUCTION_HOST=curso-backend-proyecto-fgtv.onrender.com
+```
+
+### 5. Migraciones y superusuario
 
 ```bash
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 5. Ejecuta el servidor
+### 6. Ejecuta el servidor
 
 ```bash
 python manage.py runserver
 ```
 
-Accede en tu navegador a:
-- `http://localhost:8000/` (inicio HTML)
-- `http://localhost:8000/admin/` (admin)
+---
+
+## Documentación API
+
+Visita:
+
 - `http://localhost:8000/api/docs/` (Swagger UI)
 
----
+Endpoints están agrupados por:
+- Plan
+- Medida
+- Tipo de medida
+- Organismo sectorial
+- Reporte
+- Relaciones (Plan - Organismo - Medida)
 
-## Endpoints REST Principales
-
-| Recurso                     | Ruta                         | Métodos | Requiere login |
-|----------------------------|------------------------------|---------|----------------|
-| TipoMedida                 | `/api/tipo-medida/`          | GET, POST | ✅ |
-| Medida                     | `/api/medida/`               | GET, POST | ✅ |
-| Plan                       | `/api/plan/`                 | GET, POST | ✅ |
-| Organismo Sectorial        | `/api/organismo-sectorial/`  | GET, POST | ✅ |
-| PlanOrganismoSectorial     | `/api/plan-organismo-sectorial/` | GET, POST | ✅ |
-| Reporte                    | `/api/reporte/`              | GET, POST | ✅ |
-| Swagger UI                 | `/api/docs/`                 | GET      | ❌ |
+Cada grupo contiene métodos GET, POST, PUT, PATCH y DELETE (según permisos).
 
 ---
 
-## Autenticación
+## Vistas HTML
 
-La API está protegida mediante:
+Accesibles sólo con sesión iniciada:
 
-- **BasicAuthentication** (usuario/contraseña base64)
-- **SessionAuthentication** (vía login en Django admin)
+| Página                 | Ruta               |
+|------------------------|--------------------|
+| Inicio                 | `/`                |
+| Ver Planes             | `/plan/`           |
+| Crear Plan             | `/plan/crear/`     |
+| Ver Reportes           | `/reportes/`       |
+| Crear Reporte          | `/reportes/crear/` |
 
-**Permisos personalizados por rol** en las vistas:
+---
 
-```python
-IsAdministrador
-IsOrganismoSectorial
+## Despliegue en Render
+
+Este proyecto está listo para producción con Render.
+
+1. Configura `render.yaml` y entorno `.env`
+2. Recolecta estáticos:
+
+```bash
+python manage.py collectstatic
 ```
 
----
-
-## Referencias
-
-- [DRF Official Docs](https://www.django-rest-framework.org/)
-- [DRF Spectacular](https://drf-spectacular.readthedocs.io/)
-- [Bootstrap](https://getbootstrap.com/)
-- Resolución Exenta N°1379-2020 (MMA Chile)
+3. Subir a GitHub
+4. Render detectará los cambios automáticamente
 
 ---
 
-## Contacto y Créditos
+## Estado del Proyecto
 
-Este proyecto fue desarrollado en el contexto del curso **Backend Python** como parte del avance 3 del proyecto grupal.
-Para dudas técnicas o revisión del código, utilizar los canales oficiales del curso o dejar comentarios en la entrega.
+✅ CRUD completo  
+✅ Swagger agrupado + ejemplos  
+✅ Validaciones manuales y mensajes claros  
+✅ Interfaz HTML funcional  
+✅ Autenticación y roles  
+✅ Recolector de estáticos funcionando  
 
 ---
 
-## Roadmap Académico (Fases)
+## Roadmap Académico
 
-1. **Avance 1**: Entregado el **15 de febrero de 2025**  
-2. **Avance 2**: **9 de abril de 2025** (hasta las 23:55)  
-3. **Avance 3**: Entrega programada para **21 de abril de 2025**  
-4. **Entrega Final**: **28 de abril de 2025** (antes del inicio de clases)  
-
-> Este roadmap sigue la planificación del curso **Backend Python – Proyecto Grupal (Grupo 4)**.
+| Fase           | Fecha                | Estado   |
+|----------------|----------------------|----------|
+| Avance 1       | 15 de febrero de 2025 | ✅ |
+| Avance 2       | 9 de abril de 2025    | ✅ |
+| **Entrega Final** | **24 de abril de 2025** | 🔜 |
 
 ---
 
@@ -191,3 +213,6 @@ Para dudas técnicas o revisión del código, utilizar los canales oficiales del
 ```
 © 2025 Backend Python – Uso académico. Proyecto desarrollado con fines educativos.
 ```
+```
+
+---
