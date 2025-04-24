@@ -30,9 +30,6 @@ class IsOrganismoSectorial(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.groups.filter(name='OrganismoSectorial').exists()
 
-# def NotAuthorization():
-#     return Response({"detail": "No tiene permisos para realizar esta acción."}, status=status.HTTP_403_FORBIDDEN)
-
 @extend_schema_view(
     list=extend_schema(
         description="Devuelve la lista de tipos de medida existentes.",
@@ -355,45 +352,52 @@ class PlanOrganismoSectorialViewSet(ModelViewSet):
         data = request.data
         id_plan = data.get("id_plan")
         id_organismo = data.get("id_organismo_sectorial")
-        id_medidas = data.get("id_medida")
+        id_medidas = data.get("id_media")
+
+        # Normalizar a lista
+        if isinstance(id_medidas, (int, str)):
+            id_medidas = [int(id_medidas)]
+        
+        # Validación de campos obligatorios
+        campos_obligatorios = {
+            "id_plan": id_plan,
+            "id_organismo_sectorial": id_organismo,
+            "id_medida": id_medidas,
+        }
+        errores = {campo: ["Este campo es obligatorio."] for campo, valor in campos_obligatorios.items() if valor is None}
+        if errores:
+            print(data.get("id_media"))
+            return Response({"detail": errores}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validación de duplicados
+        if len(id_medidas) != len(set(id_medidas)):
+            return Response({"detail": "Existen medidas duplicadas."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Validación de campos obligatorios
-            errores = {}
-            if id_plan is None:
-                errores["id_plan"] = ["Este campo es obligatorio."]
-            if id_organismo is None:
-                errores["id_organismo_sectorial"] = ["Este campo es obligatorio."]
-            if id_medidas is None:
-                errores["id_medida"] = ["Este campo es obligatorio."]
-            if errores:
-                raise serializers.ValidationError(errores)
-
-            # Normalización de medidas
-            if len(id_medidas) != len(set(id_medidas)):
-                raise serializers.ValidationError("Existen medidas duplicadas.")
-
             with transaction.atomic():
                 instancias_creadas = []
 
+                relaciones_existentes = PlanOrganismoSectorial.objects.filter(
+                    id_plan_id=id_plan,
+                    id_organismo_sectorial_id=id_organismo,
+                    id_media_id__in=id_medidas
+                ).values_list('id_media_id', flat=True)
+                medidas_duplicadas = set(relaciones_existentes)
+
+                if medidas_duplicadas:
+                    return Response({
+                        "detail": f"Las siguientes medidas ya están asociadas: {sorted(medidas_duplicadas)}"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                campos_base = {
+                    "id_plan": id_plan,
+                    "id_organismo_sectorial": id_organismo,
+                }
                 for id_medida in id_medidas:
-                    existe = PlanOrganismoSectorial.objects.filter(
-                        id_plan_id=id_plan,
-                        id_organismo_sectorial_id=id_organismo,
-                        id_media_id=id_medida
-                    ).exists()
-
-                    if existe:
-                        raise serializers.ValidationError(
-                            f"La medida {id_medida} ya está asociada al plan y organismo."
-                        )
-
                     serializer = PlanOrganismoSectorialSerializer(data={
-                        "id_plan": id_plan,
-                        "id_organismo_sectorial": id_organismo,
+                        **campos_base,
                         "id_media": id_medida
                     })
-
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
                     instancias_creadas.append(serializer.data)
