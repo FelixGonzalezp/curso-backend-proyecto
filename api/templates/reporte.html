@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Botón Volver al Home -->
+<div class="mb-4">
+    <a href="{% url 'html_home' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver al Home
+    </a>
+</div>
+
+<h1>Listado de Reportes</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Plan Organismo Sectorial</th>
+            <th>Valor Reportado</th>
+            <th>Evidencia</th>
+            <th>Fecha Reporte</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reporte in reportes %}
+        <tr>
+            <td>{{ reporte.id }}</td>
+            <td>{{ reporte.id_plan_organismo_sectorial }}</td>
+            <td>{{ reporte.valor_reportado }}</td>
+            <td>{{ reporte.evidencia|truncatechars:50 }}</td>
+            <td>{{ reporte.fecha_reporte|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #f8f9fa;
+    }
+    .badge {
+        padding: 0.5em 0.8em;
+    }
+    .truncate {
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .btn-secondary {
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+        transform: translateX(-5px);
+    }
+</style>
+{% endblock %}
